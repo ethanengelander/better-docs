@@ -1,19 +1,19 @@
-var reactDocs = require('react-docgen')
-var vueDocs = require('vue-docgen-api')
-var fs = require('fs')
-var path = require('path')
+const reactDocs = require('react-docgen'),
+ vueDocs = require('vue-docgen-api'),
+ fs = require('fs'),
+ path = require('path');
 
 exports.handlers = {
   beforeParse: function(e) {
     if (path.extname(e.filename) === '.vue') {
       e.componentInfo = vueDocs.parse(e.filename)
-      var script = e.source.match(new RegExp('<script>(.*?)</script>', 's'))
+      let script = e.source.match(new RegExp('<script>(.*?)</script>', 's'))
       e.source = script[1]
     }
   },
 
   newDoclet: function({ doclet }) {
-    var filePath = path.join(doclet.meta.path, doclet.meta.filename)
+    let filePath = path.join(doclet.meta.path, doclet.meta.filename)
     const componentTag = (doclet.tags || []).find(tag => tag.title === 'component')
     if (componentTag) {
       if (path.extname(filePath) === '.vue') {
@@ -44,7 +44,7 @@ exports.handlers = {
   }
 }
 
-var parseReact = function (filePath, doclet) {
+const parseReact = function (filePath, doclet) {
   if (path.extname(filePath) === '.tsx') {
     return {
       props: [],
@@ -52,8 +52,8 @@ var parseReact = function (filePath, doclet) {
       filePath: filePath,
     }
   }
-  var src = fs.readFileSync(filePath, 'UTF-8')
-  var docGen
+  let src = fs.readFileSync(filePath, 'UTF-8'),
+   docGen
   try {
     docGen = reactDocs.parse(src)
   } catch (error) {
@@ -83,7 +83,7 @@ var parseReact = function (filePath, doclet) {
   }
 }
 
-var parseVue = function (filePath, doclet) {
+const parseVue = function (filePath, doclet) {
   const docGen = vueDocs.parse(filePath)
   doclet.name = doclet.longname = docGen.displayName
   return {

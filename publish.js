@@ -1,28 +1,28 @@
 'use strict'
 
-var doop = require('jsdoc/util/doop')
-var env = require('jsdoc/env')
-var fs = require('jsdoc/fs')
-var helper = require('jsdoc/util/templateHelper')
-var logger = require('jsdoc/util/logger')
-var path = require('jsdoc/path')
-var taffy = require('taffydb').taffy
-var template = require('jsdoc/template')
-var util = require('util')
-const { getParser } = require('jsdoc/util/markdown')
+const doop = require('jsdoc/util/doop'),
+ env = require('jsdoc/env'),
+ fs = require('jsdoc/fs'),
+ helper = require('jsdoc/util/templateHelper'),
+ logger = require('jsdoc/util/logger'),
+ path = require('jsdoc/path'),
+ taffy = require('taffydb').taffy,
+ template = require('jsdoc/template'),
+ util = require('util'),
+ //{ getParser } = require('jsdoc/util/markdown'),
+ bundler = require('./bundler');
 
-var bundler = require('./bundler')
-const markdownParser = getParser()
+//const markdownParser = getParser()
 
-var htmlsafe = helper.htmlsafe
-var linkto = helper.linkto
-var resolveAuthorLinks = helper.resolveAuthorLinks
-var hasOwnProp = Object.prototype.hasOwnProperty
+const htmlsafe = helper.htmlsafe,
+ linkto = helper.linkto,
+ resolveAuthorLinks = helper.resolveAuthorLinks,
+ hasOwnProp = Object.prototype.hasOwnProperty;
 
-var data
-var view
+let data,
+ view;
 
-var outdir = path.normalize(env.opts.destination)
+let outdir = path.normalize(env.opts.destination);
 
 function find(spec) {
   return helper.find(data, spec)
@@ -41,7 +41,7 @@ function getAncestorLinks(doclet) {
 }
 
 function hashToLink(doclet, hash) {
-  var url
+  let url
 
   if ( !/^(#.+)/.test(hash) ) {
     return hash
@@ -54,7 +54,7 @@ function hashToLink(doclet, hash) {
 }
 
 function needsSignature(doclet) {
-  var needsSig = false
+  let needsSig = false
 
   // function and class definitions always get a signature
   if (doclet.kind === 'function' || doclet.kind === 'class') {
@@ -63,7 +63,7 @@ function needsSignature(doclet) {
   // typedefs that contain functions get a signature, too
   else if (doclet.kind === 'typedef' && doclet.type && doclet.type.names &&
         doclet.type.names.length) {
-    for (var i = 0, l = doclet.type.names.length; i < l; i++) {
+    for (let i = 0, l = doclet.type.names.length; i < l; i++) {
       if (doclet.type.names[i].toLowerCase() === 'function') {
         needsSig = true
         break
@@ -81,7 +81,7 @@ function needsSignature(doclet) {
 }
 
 function getSignatureAttributes(item) {
-  var attributes = []
+  let attributes = []
 
   if (item.optional) {
     attributes.push('opt')
@@ -98,8 +98,8 @@ function getSignatureAttributes(item) {
 }
 
 function updateItemName(item) {
-  var attributes = getSignatureAttributes(item)
-  var itemName = item.name || ''
+  let attributes = getSignatureAttributes(item)
+  let itemName = item.name || ''
 
   if (item.variable) {
     itemName = '&hellip;' + itemName
@@ -120,7 +120,7 @@ function addParamAttributes(params) {
 }
 
 function buildItemTypeStrings(item) {
-  var types = []
+  let types = []
 
   if (item && item.type && item.type.names) {
     item.type.names.forEach(function(name) {
@@ -132,7 +132,7 @@ function buildItemTypeStrings(item) {
 }
 
 function buildAttribsString(attribs) {
-  var attribsString = ''
+  let attribsString = ''
 
   if (attribs && attribs.length) {
     attribsString = htmlsafe( util.format('(%s) ', attribs.join(', ')) )
@@ -142,7 +142,7 @@ function buildAttribsString(attribs) {
 }
 
 function addNonParamAttributes(items) {
-  var types = []
+  let types = []
 
   items.forEach(function(item) {
     types = types.concat( buildItemTypeStrings(item) )
@@ -152,17 +152,17 @@ function addNonParamAttributes(items) {
 }
 
 function addSignatureParams(f) {
-  var params = f.params ? addParamAttributes(f.params) : []
+  let params = f.params ? addParamAttributes(f.params) : []
 
   f.signature = util.format( '%s(%s)', (f.signature || ''), params.join(', ') )
 }
 
 function addSignatureReturns(f) {
-  var attribs = []
-  var attribsString = ''
-  var returnTypes = []
-  var returnTypesString = ''
-  var source = f.yields || f.returns
+  let attribs = [],
+   attribsString = '',
+   returnTypes = [],
+   returnTypesString = '',
+   source = f.yields || f.returns;
 
   // jam all the return-type attributes into an array. this could create odd results (for example,
   // if there are both nullable and non-nullable return types), but let's assume that most people
@@ -191,15 +191,15 @@ function addSignatureReturns(f) {
 }
 
 function addSignatureTypes(f) {
-  var types = f.type ? buildItemTypeStrings(f) : []
+  let types = f.type ? buildItemTypeStrings(f) : []
 
   f.signature = (f.signature || '') + '<span class="type-signature">' +
         (types.length ? ' :' + types.join('|') : '') + '</span>'
 }
 
 function addAttribs(f) {
-  var attribs = helper.getAttribs(f)
-  var attribsString = buildAttribsString(attribs)
+  let attribs = helper.getAttribs(f),
+   attribsString = buildAttribsString(attribs);
 
   f.attribs = util.format('<span class="type-signature">%s</span>', attribsString)
   f.rawAttribs = attribs
@@ -226,9 +226,9 @@ function getPathFromDoclet(doclet) {
 }
 
 function generate(title, subtitle, docs, filename, resolveLinks) {
-  var docData
-  var html
-  var outpath
+  let docData,
+   html,
+   outpath;
 
   resolveLinks = resolveLinks !== false
 
@@ -252,9 +252,9 @@ function generate(title, subtitle, docs, filename, resolveLinks) {
 function generateSourceFiles(sourceFiles, encoding) {
   encoding = encoding || 'utf8'
   Object.keys(sourceFiles).forEach(function(file) {
-    var source
+    let source
     // links are keyed to the shortened path in each doclet's `meta.shortpath` property
-    var sourceOutfile = helper.getUniqueFilename(sourceFiles[file].shortened)
+    let sourceOutfile = helper.getUniqueFilename(sourceFiles[file].shortened)
 
     helper.registerLink(sourceFiles[file].shortened, sourceOutfile)
 
@@ -285,7 +285,7 @@ function generateSourceFiles(sourceFiles, encoding) {
  * @param {Array.<module:jsdoc/doclet.Doclet>} modules - The array of module doclets to search.
  */
 function attachModuleSymbols(doclets, modules) {
-  var symbols = {}
+  const symbols = {}
 
   // build a lookup table
   doclets.forEach(function(symbol) {
@@ -326,15 +326,15 @@ function buildMemberNav(items, itemHeading, itemsSeen, linktoFn) {
 
   const subCategoryNames = Object.keys(subCategories)
     
-  var nav = ''
+  let nav = ''
 
   subCategoryNames.forEach((subCategoryName) => {
     const subCategoryItems = subCategories[subCategoryName]
     if (subCategoryItems.length) {
-      var itemsNav = ''
+      let itemsNav = ''
     
       subCategoryItems.forEach(function(item) {
-        var displayName
+        let displayName
     
         if ( !hasOwnProp.call(item, 'longname') ) {
           itemsNav += '<li>' + linktoFn('', item.name) + '</li>'
@@ -367,7 +367,7 @@ function buildMemberNav(items, itemHeading, itemsSeen, linktoFn) {
       })
             
       if (itemsNav !== '') {
-        var heading = itemHeading
+        let heading = itemHeading
         if (subCategoryName) {
           heading = heading + ' / ' + subCategoryName
         }
@@ -388,10 +388,10 @@ function linktoExternal(longName, name) {
 }
 
 function buildGroupNav (members, title) {
-  var globalNav
-  var seenTutorials = {}
-  var nav = ''
-  var seen = {}
+  let globalNav
+  const seenTutorials = {}
+  let nav = ''
+  const seen = {}
   nav += '<div class="category">'
   if (title) {
     nav += '<h2>' + title + '</h2>'
@@ -445,12 +445,12 @@ function buildGroupNav (members, title) {
  */
 function buildNav(members, navTypes = null, betterDocs) {
   const href = betterDocs.landing ? 'docs.html' : 'index.html'
-  var nav = navTypes ? '' : `<h2><a href="${href}">Documentation</a></h2>`
+  let nav = navTypes ? '' : `<h2><a href="${href}">Documentation</a></h2>`
 
-  var categorised = {}
-  var rootScope = {}
+  const categorised = {}
+  const rootScope = {}
 
-  var types = navTypes || ['modules', 'externals', 'namespaces', 'classes',
+  let types = navTypes || ['modules', 'externals', 'namespaces', 'classes',
     'components', 'interfaces', 'events', 'mixins', 'globals']
   types.forEach(function(type) {
     if (!members[type]) { return }
@@ -482,29 +482,29 @@ function buildNav(members, navTypes = null, betterDocs) {
     @param {Tutorial} tutorials
  */
 exports.publish = function(taffyData, opts, tutorials) {
-  var classes
-  var conf
-  var externals
-  var files
-  var fromDir
-  var globalUrl
-  var indexUrl
-  var interfaces
-  var components
-  var members
-  var mixins
-  var modules
-  var namespaces
-  var outputSourceFiles
-  var packageInfo
-  var packages
-  var sourceFilePaths = []
-  var sourceFiles = {}
-  var staticFileFilter
-  var staticFilePaths
-  var staticFiles
-  var staticFileScanner
-  var templatePath
+  let classes,
+   conf,
+   externals,
+   files,
+   fromDir,
+   globalUrl,
+   indexUrl,
+   interfaces,
+   components,
+   members,
+   mixins,
+   modules,
+   namespaces,
+   outputSourceFiles,
+   packageInfo,
+   packages,
+   sourceFilePaths = [],
+   sourceFiles = {},
+   staticFileFilter,
+   staticFilePaths,
+   staticFiles,
+   staticFileScanner,
+   templatePath;
 
   data = taffyData
 
@@ -537,14 +537,14 @@ exports.publish = function(taffyData, opts, tutorials) {
   helper.addEventListeners(data)
 
   data().each(function(doclet) {
-    var sourcePath
+    let sourcePath
 
     doclet.attribs = ''
 
     if (doclet.examples) {
       doclet.examples = doclet.examples.map(function(example) {
-        var caption
-        var code
+        let caption
+        let code
 
         if (example.match(/^\s*<caption>([\s\S]+?)<\/caption>(\s*[\n\r])([\s\S]+)$/i)) {
           caption = RegExp.$1
@@ -588,7 +588,7 @@ exports.publish = function(taffyData, opts, tutorials) {
   staticFiles = fs.ls(fromDir, 3)
 
   staticFiles.forEach(function(fileName) {
-    var toDir = fs.toDir( fileName.replace(fromDir, outdir) )
+    let toDir = fs.toDir( fileName.replace(fromDir, outdir) )
 
     fs.mkPath(toDir)
     fs.copyFileSync(fileName, toDir)
@@ -605,14 +605,14 @@ exports.publish = function(taffyData, opts, tutorials) {
     staticFileScanner = new (require('jsdoc/src/scanner')).Scanner()
 
     staticFilePaths.forEach(function(filePath) {
-      var extraStaticFiles
+      let extraStaticFiles
 
       filePath = path.resolve(env.pwd, filePath)
       extraStaticFiles = staticFileScanner.scan([filePath], 10, staticFileFilter)
 
       extraStaticFiles.forEach(function(fileName) {
-        var sourcePath = fs.toDir(filePath)
-        var toDir = fs.toDir( fileName.replace(sourcePath, outdir) )
+        let sourcePath = fs.toDir(filePath)
+        let toDir = fs.toDir( fileName.replace(sourcePath, outdir) )
 
         fs.mkPath(toDir)
         fs.copyFileSync(fileName, toDir)
@@ -624,8 +624,8 @@ exports.publish = function(taffyData, opts, tutorials) {
     sourceFiles = shortenPaths( sourceFiles, path.commonPrefix(sourceFilePaths) )
   }
   data().each(function(doclet) {
-    var docletPath
-    var url = helper.createLink(doclet)
+    let docletPath
+    let url = helper.createLink(doclet)
 
     helper.registerLink(doclet.longname, url)
 
@@ -640,7 +640,7 @@ exports.publish = function(taffyData, opts, tutorials) {
   })
 
   data().each(function(doclet) {
-    var url = helper.longnameToUrl[doclet.longname]
+    let url = helper.longnameToUrl[doclet.longname]
 
     if (url.indexOf('#') > -1) {
       doclet.id = helper.longnameToUrl[doclet.longname].split(/#/).pop()
@@ -746,13 +746,13 @@ exports.publish = function(taffyData, opts, tutorials) {
   components = taffy(members.components)
 
   Object.keys(helper.longnameToUrl).forEach(function(longname) {
-    var myClasses = helper.find(classes, {longname: longname})
-    var myExternals = helper.find(externals, {longname: longname})
-    var myInterfaces = helper.find(interfaces, {longname: longname})
-    var myMixins = helper.find(mixins, {longname: longname})
-    var myModules = helper.find(modules, {longname: longname})
-    var myNamespaces = helper.find(namespaces, {longname: longname})
-    var myComponents = helper.find(components, {longname: longname})
+    let myClasses = helper.find(classes, {longname: longname}),
+     myExternals = helper.find(externals, {longname: longname}),
+     myInterfaces = helper.find(interfaces, {longname: longname}),
+     myMixins = helper.find(mixins, {longname: longname}),
+     myModules = helper.find(modules, {longname: longname}),
+     myNamespaces = helper.find(namespaces, {longname: longname}),
+     myComponents = helper.find(components, {longname: longname});
 
     if (myModules.length) {
       generate(myModules[0].name, 'Module', myModules,  helper.longnameToUrl[longname])
@@ -785,15 +785,15 @@ exports.publish = function(taffyData, opts, tutorials) {
 
   // TODO: move the tutorial functions to templateHelper.js
   function generateTutorial(title, subtitle, tutorial, filename) {
-    var tutorialData = {
+    const tutorialData = {
       title: title,
       subtitle: subtitle,
       header: tutorial.title,
       content: tutorial.parse(),
       children: tutorial.children
-    }
-    var tutorialPath = path.join(outdir, filename)
-    var html = view.render('tutorial.tmpl', tutorialData)
+    };
+    let tutorialPath = path.join(outdir, filename),
+     html = view.render('tutorial.tmpl', tutorialData);
 
     // yes, you can use {@link} in tutorials too!
     html = helper.resolveLinks(html) // turn {@link foo} into <a href="foodoc.html">foo</a>
@@ -812,20 +812,20 @@ exports.publish = function(taffyData, opts, tutorials) {
   saveChildren(tutorials)
 
   function saveLandingPage() {
-    const content = fs.readFileSync(conf.betterDocs.landing, 'utf8')
+    const content = fs.readFileSync(conf.betterDocs.landing, 'utf8'),
         
-    var landingPageData = {
+     landingPageData = {
       title: 'Home',
       content,
-    }
+    };
 
-    var homePath = path.join(outdir, 'index.html')
-    var docsPath = path.join(outdir, 'docs.html')
+    let homePath = path.join(outdir, 'index.html'),
+     docsPath = path.join(outdir, 'docs.html');
 
     fs.renameSync(homePath, docsPath)
         
     view.layout = 'landing.tmpl'
-    var html = view.render('content.tmpl', landingPageData)
+    let html = view.render('content.tmpl', landingPageData)
 
     // yes, you can use {@link} in tutorials too!
     html = helper.resolveLinks(html) // turn {@link foo} into <a href="foodoc.html">foo</a>

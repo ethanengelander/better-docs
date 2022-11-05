@@ -1,13 +1,13 @@
 /*global document */
 
 (function() {
-    var source = document.getElementsByClassName('prettyprint source linenums');
-    var i = 0;
-    var lineNumber = 0;
-    var lineId;
-    var lines;
-    var totalLines;
-    var anchorHash;
+    let source = document.getElementsByClassName('prettyprint source linenums'),
+     i = 0,
+     lineNumber = 0,
+     lineId,
+     lines,
+     totalLines,
+     anchorHash;
 
     if (source && source[0]) {
         anchorHash = document.location.hash.substring(1);
